@@ -515,3 +515,23 @@ mark.pendiente{background:#FFE58F;color:#3A2E00;padding:0 4px;border-radius:4px}
   .flow-help{padding:8px}
 }
 @media(max-width:420px){ .hide-sm{display:none} }
+
+/* Medición del pie */
+.sub-h{font-size:1.15rem;margin:26px 0 12px}
+.measure-guide{display:grid;gap:16px;align-items:center;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow)}
+@media(min-width:700px){ .measure-guide{grid-template-columns:200px 1fr} }
+.measure-svg{width:100%;max-width:220px;margin:0 auto}
+.ms-wall{fill:var(--ink-soft);opacity:.35}
+.ms-sheet{fill:#fff;stroke:var(--line);stroke-width:2}
+.ms-foot{fill:#E9B99A;stroke:#B07A5A;stroke-width:1.5}
+.ms-dim{stroke:var(--teal);stroke-width:2;stroke-dasharray:4 3}
+.ms-cam{fill:var(--teal)}
+.ms-label{font:700 11px Manrope,sans-serif;fill:var(--ink-soft)}
+.ms-label-w{font:800 9px Manrope,sans-serif;fill:var(--bg);letter-spacing:.1em}
+.measure-steps{margin:0;padding-left:20px;display:grid;gap:8px;color:var(--ink-soft);font-size:.95rem}
+.measure-steps strong{color:var(--ink)}
+.measure-card .mcanvas{width:100%;border-radius:12px;border:1px solid var(--line);background:#000}
+.measure-card.has-canvas .uprev{display:none!important}
+.mres{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.95rem}
+.mres dt{color:var(--ink-soft);font-weight:600}
+.mres dd{margin:0;font-weight:800}

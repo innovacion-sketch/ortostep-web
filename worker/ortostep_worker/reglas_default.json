@@ -1,0 +1,39 @@
+{
+  "_nota": "Valores por defecto configurables. Casi ninguno es un umbral clínico validado: son puntos de partida de opinión experta que el ortesista debe ajustar. Cambia este archivo (o crea reglas.json junto al programa) sin tocar el código.",
+
+  "_largo_plantilla": "El largo de la plantilla sale de la TALLA (como en el sistema de diseño: talla 24 → 243 mm, 27 → 273, 30 → 303). El largo medido del pie solo sirve para cotejar.",
+  "largo_plantilla_desde_talla_mm": 3,
+  "largo_plantilla_sin_talla_extra_mm": 13,
+  "rango_talla_menos_pie_mm": [5, 22],
+  "posicion_almohadilla_metatarsal_mm_antes_de_cabezas": 8,
+  "ancho_talon_proporcion_del_antepie": 0.63,
+  "linea_metatarsal_pct_por_defecto": 0.72,
+
+  "espesor_base_mm": { "clasica": 2.5, "deportiva": 3.0, "sandalia": 4.0, "bostoniana": 3.5 },
+
+  "altura_arco_mm": { "Bajo o plano": 10, "Medio": 14, "Alto": 18, "No sé": 13 },
+  "ajuste_arco_por_peso": [ { "desde_kg": 0, "mm": -1 }, { "desde_kg": 60, "mm": 0 }, { "desde_kg": 90, "mm": 1 }, { "desde_kg": 110, "mm": 2 } ],
+  "altura_arco_max_mm": 22,
+
+  "copa_talon_mm": { "base": 12, "dolor_talon": 15, "deportiva": 14 },
+
+  "poste_medial_retropie_grados": { "pie_plano": 3, "fppa_valgo": 2, "maximo": 4 },
+  "umbral_fppa_valgo_grados": 10,
+
+  "almohadilla_metatarsal": { "altura_mm": 4, "largo_mm": 30, "ancho_mm": 22 },
+
+  "relleno_tpu_pct": [ { "desde_kg": 0, "pct": 25 }, { "desde_kg": 70, "pct": 30 }, { "desde_kg": 90, "pct": 40 }, { "desde_kg": 110, "pct": 50 } ],
+  "relleno_extra_deportiva_pct": 5,
+  "relleno_zona_talon_suave_pct": 15,
+
+  "bloqueos": {
+    "_nota": "Casos que nunca se diseñan ni imprimen sin revisión del ortesista.",
+    "diabetes": true,
+    "dolor_maximo_igual_o_mayor": 8,
+    "edad_menor_a": 12,
+    "diferencia_largo_pies_mm": 10,
+    "cirugia_previa": true,
+    "dolor_dorsal_o_tobillo": true,
+    "medicion_faltante_o_baja_confianza": true
+  }
+}

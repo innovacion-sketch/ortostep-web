@@ -2,3 +2,10 @@
 Thumbs.db
 *.log
 .claude/
+research_notes/
+reports/
+worker/.venv/
+worker/cache/
+worker/.env
+worker/reglas.json
+__pycache__/

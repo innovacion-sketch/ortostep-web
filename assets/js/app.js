@@ -197,11 +197,15 @@
   var RULES = {
     'scan-derecho':   { type: 'video', min: 10, max: 90,  label: 'Escaneo del pie derecho' },
     'scan-izquierdo': { type: 'video', min: 10, max: 90,  label: 'Escaneo del pie izquierdo' },
-    marcha:           { type: 'video', min: 6,  max: 90,  label: 'Video caminando' },
-    sentadilla:       { type: 'video', min: 6,  max: 120, label: 'Prueba de movimiento' }
+    'medida-der':     { type: 'measure', side: 'derecho',   label: 'Foto de medida del pie derecho' },
+    'medida-izq':     { type: 'measure', side: 'izquierdo', label: 'Foto de medida del pie izquierdo' },
+    marcha:           { type: 'video', min: 6,  max: 90,  label: 'Video caminando de frente', pose: 'frente' },
+    'marcha-lateral': { type: 'video', min: 6,  max: 90,  label: 'Video caminando de lado', pose: 'lado' },
+    sentadilla:       { type: 'video', min: 6,  max: 120, label: 'Prueba de movimiento (sentadilla)', pose: 'sentadilla' }
   };
   PHOTOS.forEach(function (p) { RULES[p.key] = { type: 'image', label: 'Foto: ' + p.label }; });
-  var FILE_ORDER = ['scan-derecho', 'scan-izquierdo'].concat(PHOTOS.map(function (p) { return p.key; }), ['marcha', 'sentadilla']);
+  var FILE_ORDER = ['scan-derecho', 'scan-izquierdo', 'medida-der', 'medida-izq'].concat(PHOTOS.map(function (p) { return p.key; }), ['marcha', 'marcha-lateral', 'sentadilla']);
+  var MEDIDAS = { derecho: 'medida-der', izquierdo: 'medida-izq' };
 
   var S = {
     product: 'clasica', step: 1, files: {}, pain: {}, sinDolor: false,
@@ -445,7 +449,8 @@
   function validate(step) {
     var errs = [];
     if (step === 1) {
-      if (val('f-nombre').length < 3) errs.push('Tu nombre completo');
+      var nom = val('f-nombre').replace(/\s+/g, ' ');
+      if (nom.length < 5 || nom.indexOf(' ') < 1) errs.push('Tu nombre completo, con nombre y apellido');
       var edad = parseFloat(val('f-edad'));
       if (!(edad >= 4 && edad <= 100)) errs.push('Tu edad (de 4 a 100 años)');
       if (!val('f-sexo')) errs.push('Tu sexo');
@@ -459,6 +464,11 @@
     if (step === 2) {
       if (!accepted('scan-derecho')) errs.push(fileErr('scan-derecho', 'El video de tu pie derecho'));
       if (!accepted('scan-izquierdo')) errs.push(fileErr('scan-izquierdo', 'El video de tu pie izquierdo'));
+      if (!accepted('medida-der')) errs.push(fileErr('medida-der', 'La foto de medida de tu pie derecho'));
+      if (!accepted('medida-izq')) errs.push(fileErr('medida-izq', 'La foto de medida de tu pie izquierdo'));
+      var algunaMedida = medidaDe('derecho') || medidaDe('izquierdo');
+      var largoManual = parseFloat(val('f-largo'));
+      if (!algunaMedida && !(largoManual >= 12 && largoManual <= 35)) errs.push('El largo de tu pie en cm (no pudimos medirlo en tus fotos)');
       if (!val('f-talla')) errs.push('Tu talla de calzado');
       if (!checkedVal('arco')) errs.push('Cómo es tu arco (puedes elegir «No sé»)');
     }
@@ -466,7 +476,8 @@
       PHOTOS.forEach(function (p) { if (!accepted(p.key)) errs.push(fileErr(p.key, 'La foto: ' + p.title.replace(/^\d+\.\s*/, ''))); });
     }
     if (step === 4) {
-      if (!accepted('marcha')) errs.push(fileErr('marcha', 'Tu video caminando'));
+      if (!accepted('marcha')) errs.push(fileErr('marcha', 'Tu video caminando de frente'));
+      if (!accepted('marcha-lateral')) errs.push(fileErr('marcha-lateral', 'Tu video caminando de lado'));
       if (!accepted('sentadilla')) errs.push(fileErr('sentadilla', 'Tu video de la prueba de movimiento'));
     }
     if (step === 5) {
@@ -612,9 +623,9 @@
       if (d && d > rule.max) warns.push('Es largo (' + Math.round(d) + ' s). Sirve, pero tardará más en enviarse.');
       if (r.mean != null && r.mean < 40) warns.push('Se ve oscuro. Graba con más luz.');
       var info = (d ? Math.round(d) + ' s · ' : '') + (r.w ? r.w + '×' + r.h + ' · ' : '') + mb(file.size);
-      if (errs.length) return { level: 'err', msgs: errs.concat(warns), info: info };
-      if (warns.length) return { level: 'warn', msgs: warns, info: info };
-      return { level: 'ok', msgs: ['Duración, luz y resolución correctas.'], info: info };
+      if (errs.length) return { level: 'err', msgs: errs.concat(warns), info: info, duracion: d };
+      if (warns.length) return { level: 'warn', msgs: warns, info: info, duracion: d };
+      return { level: 'ok', msgs: ['Duración, luz y resolución correctas.'], info: info, duracion: d };
     });
   }
 
@@ -623,9 +634,13 @@
     var rule = RULES[key]; if (!rule || !file) return;
     S.files[key] = { level: 'busy', name: file.name };
     paintCard(key);
-    var check = rule.type === 'image' ? checkImage(file) : checkVideo(file, rule, opts.duration);
+    var check = rule.type === 'image' ? checkImage(file)
+      : rule.type === 'measure' ? checkMeasure(file, rule.side)
+      : checkVideo(file, rule, opts.duration).then(function (res) { return rule.pose ? checkPose(key, file, rule, res, opts.duration) : res; });
     return check.then(function (res) {
       var meta = { name: file.name || key, type: file.type, size: file.size, level: res.level, msgs: res.msgs, info: res.info || '', recorded: !!opts.recorded };
+      if (res.medida !== undefined) meta.medida = res.medida;
+      if (res.postura !== undefined) meta.postura = res.postura;
       S.files[key] = meta;
       if (res.level === 'err') {
         delete FILES[key];
@@ -638,8 +653,86 @@
         });
       }
       paintCard(key);
+      if (rule.type === 'measure') largoDesdeMedidas();
       hideAlert();
       save();
+    });
+  }
+
+  /* ---------- Medición del pie (foto sobre la hoja) ---------- */
+  function medidaDe(lado) {
+    var k = MEDIDAS[lado], m = S.files[k];
+    return accepted(k) && m && m.medida && m.medida.ok ? m.medida : null;
+  }
+  function checkMeasure(file, lado) {
+    return checkImage(file).then(function (base) {
+      if (base.level === 'err') return base;
+      if (!window.OrtostepMedicion) return { level: 'warn', msgs: ['No pudimos medir en este navegador; escribe el largo de tu pie abajo.'], info: base.info, medida: null };
+      return window.OrtostepMedicion.medirPie(file, lado).then(function (m) {
+        if (!m.ok) return { level: 'warn', msgs: [m.motivo, 'Repite la foto siguiendo la guía, o escribe el largo de tu pie abajo.'], info: base.info, medida: { ok: false, motivo: m.motivo } };
+        var avisos = (m.avisos || []).concat(base.level === 'warn' ? base.msgs : []);
+        return {
+          level: avisos.length ? 'warn' : 'ok', msgs: avisos,
+          info: 'Largo ' + (m.largo_mm / 10).toFixed(1) + ' cm · Ancho ' + (m.ancho_mm / 10).toFixed(1) + ' cm · Hoja ' + m.hoja,
+          medida: m
+        };
+      }).catch(function () {
+        return { level: 'warn', msgs: ['No pudimos analizar esta foto. Repítela o escribe el largo de tu pie abajo.'], info: base.info, medida: null };
+      });
+    });
+  }
+  function largoDesdeMedidas() {
+    var d = medidaDe('derecho'), i = medidaDe('izquierdo'), inp = $('f-largo');
+    var mx = Math.max(d ? d.largo_mm : 0, i ? i.largo_mm : 0);
+    if (!mx) return;
+    if (!inp.value || inp.dataset.auto === '1') {
+      inp.value = (mx / 10).toFixed(1); inp.dataset.auto = '1';
+      suggestTalla();
+      var box = $('tallaSuggest');
+      if (!val('f-talla') && box.dataset.talla && box.dataset.talla !== 'Otra') $('f-talla').value = box.dataset.talla;
+    }
+  }
+  function pintarMedida(card, key, meta, blob) {
+    var canvas = card.querySelector('.mcanvas'), dl = card.querySelector('.mres');
+    if (!canvas) return;
+    var m = meta && meta.medida;
+    if (!m || !m.ok || !blob || meta.level === 'err') {
+      canvas.hidden = true; dl.hidden = true; card.classList.remove('has-canvas'); return;
+    }
+    dl.innerHTML = '<dt>Largo</dt><dd>' + (m.largo_mm / 10).toFixed(1) + ' cm</dd>' +
+      '<dt>Ancho</dt><dd>' + (m.ancho_mm / 10).toFixed(1) + ' cm</dd>' +
+      '<dt>Hoja</dt><dd>' + esc(m.hoja) + '</dd>' +
+      '<dt>Confianza</dt><dd>' + esc(m.confianza) + '</dd>';
+    dl.hidden = false;
+    window.OrtostepMedicion.dibujar(canvas, blob, m).then(function () {
+      canvas.hidden = false; card.classList.add('has-canvas');
+    }).catch(function () { canvas.hidden = true; card.classList.remove('has-canvas'); });
+  }
+
+  /* ---------- Revisión de postura en videos de movimiento ---------- */
+  function pct(x) { return Math.round(x * 100) + ' %'; }
+  function checkPose(key, file, rule, res, known) {
+    if (res.level === 'err' || !window.OrtostepPostura) return Promise.resolve(res);
+    var qs = cardFor(key).querySelector('.qstatus');
+    qs.className = 'qstatus show busy'; qs.textContent = 'Revisando que se vean tu cuerpo y tus pies…';
+    return window.OrtostepPostura.revisar(file, res.duracion || known).then(function (p) {
+      var errs = [], warns = [];
+      if (p.persona < 0.5) errs.push('Casi no te detectamos en el video (solo en ' + pct(p.persona) + ' de los cuadros). Que se vea todo tu cuerpo y haya buena luz.');
+      else {
+        if (p.pies < 0.5) errs.push('No se ven bien tus pies en la mayor parte del video (solo en ' + pct(p.pies) + '). Aleja el celular a 3 o 4 metros, a la altura de tu cadera.');
+        else if (p.pies < 0.75) warns.push('Tus pies no se ven en parte del video (se ven en ' + pct(p.pies) + ').');
+        if (p.cuerpo < 0.6) warns.push('Que se vea todo tu cuerpo, de la cabeza a los pies, durante todo el video.');
+        if (p.otra > 0.25) warns.push('Aparece otra persona en el video. Graba solo a quien camina.');
+        if (rule.pose === 'lado' && p.desplazamiento < 0.25) warns.push('Parece que no cruzaste el cuadro de lado a lado. Camina de perfil de un extremo al otro.');
+      }
+      var out = { level: res.level, msgs: (res.msgs || []).slice(), info: res.info, postura: p };
+      if (errs.length) { out.level = 'err'; out.msgs = errs.concat(warns); }
+      else if (warns.length) { out.level = 'warn'; out.msgs = (res.level === 'warn' ? res.msgs : []).concat(warns); }
+      if (out.level === 'ok') out.info = (res.info ? res.info + ' · ' : '') + 'cuerpo y pies visibles';
+      return out;
+    }).catch(function (e) {
+      if (window.console) console.warn('Revisión de postura no disponible:', e && e.message);
+      return { level: res.level, msgs: res.msgs, info: res.info, postura: null };
     });
   }
 
@@ -666,6 +759,7 @@
       if (fn) fn.textContent = (meta.recorded ? 'Grabado aquí' : meta.name) + ' · ' + mb(meta.size);
     }
     if (recBtn) recBtn.textContent = accepted(key) ? 'Volver a grabar' : 'Grabar con la cámara';
+    if (RULES[key].type === 'measure') pintarMedida(card, key, meta, blob);
   }
 
   flow.addEventListener('change', function (e) {
@@ -773,14 +867,16 @@
     var len = parseFloat(val('f-largo')), box = $('tallaSuggest'), span = box.querySelector('span'), btn = $('useSuggest');
     if (!(len >= 12 && len <= 35)) { box.classList.remove('show'); return; }
     var opts = qsa('#f-talla option', flow).map(function (o) { return o.value; }).filter(function (v) { return v && v !== 'Otra'; });
-    var target = Math.round(len * 2) / 2;
+    // La talla de calzado suele quedar de 0.5 a 2.2 cm por encima del largo del pie
+    // (mediana 1.3 cm en pedidos reales del sistema de diseño); sugerimos +1 cm.
+    var target = Math.round((len + 1.0) * 2) / 2;
     box.classList.add('show');
     if (target < 21) { span.textContent = 'Para tallas menores a 21, elige «Otra talla» y te contactamos.'; btn.hidden = true; box.dataset.talla = 'Otra'; return; }
     var best = opts.reduce(function (a, b) { return Math.abs(b - target) < Math.abs(a - target) ? b : a; });
-    span.textContent = 'Talla sugerida: ' + best + ' MX';
+    span.textContent = 'Talla sugerida: ' + best + ' MX (el calzado suele medir cerca de 1 cm más que el pie). Si usas otra, elige la tuya.';
     btn.hidden = false; box.dataset.talla = best;
   }
-  $('f-largo').addEventListener('input', suggestTalla);
+  $('f-largo').addEventListener('input', function () { this.dataset.auto = '0'; suggestTalla(); });
   $('useSuggest').addEventListener('click', function () { $('f-talla').value = $('tallaSuggest').dataset.talla; save(); });
 
   /* ---------- Mapa de dolor ---------- */
@@ -935,14 +1031,26 @@
   }
   function gatherHealth() { return qsa('input[name="salud"]:checked', flow).map(function (c) { return c.value; }); }
   function countAccepted(keys) { return keys.filter(accepted).length; }
+  function textoMedidas() {
+    var d = medidaDe('derecho'), i = medidaDe('izquierdo');
+    function t(m) { return m ? (m.largo_mm / 10).toFixed(1) + ' × ' + (m.ancho_mm / 10).toFixed(1) + ' cm' : 'sin medir'; }
+    if (!d && !i) return val('f-largo') ? 'largo ' + val('f-largo') + ' cm (a mano)' : 'sin medir';
+    return 'der ' + t(d) + ', izq ' + t(i) + ' (hoja ' + ((d || i).hoja) + ')';
+  }
+  function medidaParaEnvio(lado) {
+    var m = medidaDe(lado);
+    if (!m) { var meta = S.files[MEDIDAS[lado]]; return meta && meta.medida ? { ok: false, motivo: meta.medida.motivo || 'sin medición' } : null; }
+    var c = {}; Object.keys(m).forEach(function (k) { if (k !== 'overlay') c[k] = m[k]; });
+    return c;
+  }
   function buildSummary() {
     var it = [], p = PRODUCTS[S.product];
     it.push(li(true, '<strong>' + esc(p.name) + '</strong> · ' + esc(priceText(S.product))));
     if (esCalzado(S.product)) { var col = checkedVal('upper-color'); it.push(li(!!col, 'Color: ' + esc(col || 'sin elegir (elígelo arriba)'))); }
     it.push(li(validate(1).length === 0, 'Datos: ' + esc(val('f-nombre') || '—') + (val('f-edad') ? ', ' + esc(val('f-edad')) + ' años' : '') + (val('f-peso') ? ' · ' + esc(val('f-peso')) + ' kg' : '') + (val('f-estatura') ? ' · ' + esc(val('f-estatura')) + ' cm' : ''), 1));
-    it.push(li(validate(2).length === 0, 'Escaneo: ' + countAccepted(['scan-derecho', 'scan-izquierdo']) + ' de 2 videos · Talla ' + esc(val('f-talla') || '—') + ' · Arco: ' + esc(checkedVal('arco') || '—'), 2));
+    it.push(li(validate(2).length === 0, 'Pies: ' + esc(textoMedidas()) + ' · ' + countAccepted(['scan-derecho', 'scan-izquierdo']) + ' de 2 videos · Talla ' + esc(val('f-talla') || '—') + ' · Arco: ' + esc(checkedVal('arco') || '—'), 2));
     it.push(li(validate(3).length === 0, 'Fotos: ' + countAccepted(PHOTOS.map(function (x) { return x.key; })) + ' de 7', 3));
-    it.push(li(validate(4).length === 0, 'Videos de marcha y movimiento: ' + countAccepted(['marcha', 'sentadilla']) + ' de 2', 4));
+    it.push(li(validate(4).length === 0, 'Videos de marcha y movimiento: ' + countAccepted(['marcha', 'marcha-lateral', 'sentadilla']) + ' de 3', 4));
     var pz = Object.keys(S.pain).map(function (k) { return ZONES[k] + ' (' + S.pain[k].nivel + '/10)'; }).join(', ');
     it.push(li(validate(5).length === 0, 'Mapa de dolor: ' + esc(S.sinDolor ? 'sin dolor' : (pz || 'sin zonas marcadas')), 5));
     var salud = gatherHealth();
@@ -969,6 +1077,10 @@
       nombre: val('f-nombre'), edad: +val('f-edad'), sexo: val('f-sexo'), peso_kg: +val('f-peso'), estatura_cm: +val('f-estatura'),
       correo: val('f-correo'), whatsapp: phone10(),
       medidas: { largo_pie_cm: val('f-largo') ? +val('f-largo') : null, talla_mx: val('f-talla'), arco: checkedVal('arco') },
+      medicion_pie: { derecho: medidaParaEnvio('derecho'), izquierdo: medidaParaEnvio('izquierdo') },
+      revision_postura: ['marcha', 'marcha-lateral', 'sentadilla'].reduce(function (o, k) {
+        var m = S.files[k]; o[k] = m && m.postura ? m.postura : null; return o;
+      }, {}),
       dolor: S.sinDolor ? 'sin dolor' : Object.keys(S.pain).map(function (k) {
         var d = S.pain[k]; return { zona: ZONES[k], desde: d.desde, intensidad: d.nivel, cuando: d.cuando };
       }),
@@ -1001,6 +1113,11 @@
     L.push('');
     L.push('MEDIDAS');
     L.push('Talla MX: ' + d.medidas.talla_mx + (d.medidas.largo_pie_cm ? ' · Largo del pie: ' + d.medidas.largo_pie_cm + ' cm' : '') + ' · Arco: ' + d.medidas.arco);
+    ['derecho', 'izquierdo'].forEach(function (lado) {
+      var m = d.medicion_pie[lado];
+      if (m && m.ok) L.push('Pie ' + lado + ': largo ' + m.largo_mm + ' mm, ancho ' + m.ancho_mm + ' mm, 1.ª cabeza metatarsal al ' + Math.round(m.mtp1_pct * 100) + ' % del largo (hoja ' + m.hoja + ', confianza ' + m.confianza + ')');
+      else L.push('Pie ' + lado + ': sin medición automática');
+    });
     L.push('');
     L.push('MAPA DE DOLOR');
     if (d.dolor === 'sin dolor') L.push('Sin dolor.');
@@ -1139,7 +1256,7 @@
     if (WA) wa.href = waLink(text); else wa.style.display = 'none';
     var subject = 'Expediente ORTOSTEP — ' + val('f-nombre') + ' — ' + PRODUCTS[S.product].name;
     var body = text.length > 6000 ? text.slice(0, 6000) + '\n…' : text;
-    $('manualMail').href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body + '\n\n(Adjunto mis 4 videos y 7 fotos.)');
+    $('manualMail').href = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body + '\n\n(Adjunto mis 5 videos y 9 fotos.)');
     var share = $('scanShare'); share.innerHTML = '';
     ['derecho', 'izquierdo'].forEach(function (side) {
       var k = 'scan-' + side, m = S.files[k];

@@ -1,0 +1,440 @@
+{
+  "version_ficha": 1,
+  "generada": "2026-11-24T21:47:19+00:00",
+  "pedido": {
+    "id": "00000000-0000-0000-0000-000000000000",
+    "folio": "OS-EJEMPLO",
+    "producto": "deportiva",
+    "color": null,
+    "talla_mx": "26.5"
+  },
+  "paciente": {
+    "edad": 34.0,
+    "sexo": "Femenino",
+    "peso_kg": 68.0,
+    "estatura_cm": 165,
+    "uso": "Deporte",
+    "deporte": "Correr",
+    "frecuencia": "2 a 3 veces por semana",
+    "horas_de_pie": null,
+    "calzado": "Deportivo",
+    "ancho_autodeclarado": "Normal"
+  },
+  "pies": {
+    "derecho": {
+      "fuente": "foto_sobre_hoja",
+      "confianza": "alta",
+      "hoja": "carta",
+      "largo_mm": 250,
+      "ancho_mm": 96,
+      "mtp1_pct": 0.716,
+      "mtp5_pct": 0.632,
+      "bola_pct": 0.72,
+      "contorno_mm": [
+        [
+          0,
+          0
+        ],
+        [
+          -24,
+          10
+        ],
+        [
+          -32,
+          40
+        ],
+        [
+          -36,
+          100
+        ],
+        [
+          -50,
+          160
+        ],
+        [
+          -48,
+          180
+        ],
+        [
+          -40,
+          210
+        ],
+        [
+          -22,
+          235
+        ],
+        [
+          12,
+          250
+        ],
+        [
+          22,
+          250
+        ],
+        [
+          30,
+          235
+        ],
+        [
+          44,
+          210
+        ],
+        [
+          48,
+          180
+        ],
+        [
+          40,
+          160
+        ],
+        [
+          28,
+          100
+        ],
+        [
+          30,
+          40
+        ],
+        [
+          22,
+          10
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "avisos": [],
+      "ancho_talon_mm": 60,
+      "ancho_talon_es_estimado": true
+    },
+    "izquierdo": {
+      "fuente": "foto_sobre_hoja",
+      "confianza": "alta",
+      "hoja": "carta",
+      "largo_mm": 248,
+      "ancho_mm": 95,
+      "mtp1_pct": 0.712,
+      "mtp5_pct": 0.636,
+      "bola_pct": 0.71,
+      "contorno_mm": [
+        [
+          0,
+          0
+        ],
+        [
+          -24,
+          10
+        ],
+        [
+          -32,
+          40
+        ],
+        [
+          -36,
+          100
+        ],
+        [
+          -50,
+          160
+        ],
+        [
+          -48,
+          180
+        ],
+        [
+          -40,
+          210
+        ],
+        [
+          -22,
+          235
+        ],
+        [
+          12,
+          248
+        ],
+        [
+          22,
+          248
+        ],
+        [
+          30,
+          235
+        ],
+        [
+          44,
+          210
+        ],
+        [
+          48,
+          180
+        ],
+        [
+          40,
+          160
+        ],
+        [
+          28,
+          100
+        ],
+        [
+          30,
+          40
+        ],
+        [
+          22,
+          10
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "avisos": [],
+      "ancho_talon_mm": 60,
+      "ancho_talon_es_estimado": true
+    }
+  },
+  "clinica": {
+    "arco_autodeclarado": "Bajo o plano",
+    "condiciones": [
+      "Fascitis plantar"
+    ],
+    "dolor": [
+      {
+        "zona": "Talón",
+        "desde": "De 1 a 6 meses",
+        "intensidad": 6,
+        "cuando": [
+          "Al despertar"
+        ]
+      },
+      {
+        "zona": "Parte delantera de la planta",
+        "desde": "Menos de 1 mes",
+        "intensidad": 4,
+        "cuando": [
+          "Al correr"
+        ]
+      }
+    ],
+    "nota_salud": "",
+    "objetivo": "Correr 10 km sin dolor de talón"
+  },
+  "marcha": {},
+  "banderas": [],
+  "requiere_revision": false,
+  "estado_sugerido": "listo_para_disenar",
+  "diseno_sugerido": {
+    "por_pie": {
+      "derecho": {
+        "largo_plantilla_mm": 268,
+        "largo_plantilla_desde": "talla",
+        "largo_pie_mm": 250,
+        "ancho_antepie_mm": 96,
+        "ancho_talon_mm": 60,
+        "linea_metatarsal_pct": 0.674,
+        "altura_arco_mm": 10,
+        "pico_arco_pct": 0.42,
+        "copa_talon_mm": 15,
+        "poste_medial_retropie_grados": 3,
+        "almohadilla_metatarsal": {
+          "centro_desde_talon_mm": 145,
+          "centro_pct": 0.582,
+          "altura_mm": 4,
+          "largo_mm": 30,
+          "ancho_mm": 22
+        },
+        "talon_suave": true,
+        "soporte_lateral": false,
+        "espesor_base_mm": 3.0,
+        "contorno_pie_mm": [
+          [
+            0,
+            0
+          ],
+          [
+            -24,
+            10
+          ],
+          [
+            -32,
+            40
+          ],
+          [
+            -36,
+            100
+          ],
+          [
+            -50,
+            160
+          ],
+          [
+            -48,
+            180
+          ],
+          [
+            -40,
+            210
+          ],
+          [
+            -22,
+            235
+          ],
+          [
+            12,
+            250
+          ],
+          [
+            22,
+            250
+          ],
+          [
+            30,
+            235
+          ],
+          [
+            44,
+            210
+          ],
+          [
+            48,
+            180
+          ],
+          [
+            40,
+            160
+          ],
+          [
+            28,
+            100
+          ],
+          [
+            30,
+            40
+          ],
+          [
+            22,
+            10
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "izquierdo": {
+        "largo_plantilla_mm": 268,
+        "largo_plantilla_desde": "talla",
+        "largo_pie_mm": 248,
+        "ancho_antepie_mm": 95,
+        "ancho_talon_mm": 60,
+        "linea_metatarsal_pct": 0.674,
+        "altura_arco_mm": 10,
+        "pico_arco_pct": 0.42,
+        "copa_talon_mm": 15,
+        "poste_medial_retropie_grados": 3,
+        "almohadilla_metatarsal": {
+          "centro_desde_talon_mm": 144,
+          "centro_pct": 0.581,
+          "altura_mm": 4,
+          "largo_mm": 30,
+          "ancho_mm": 22
+        },
+        "talon_suave": true,
+        "soporte_lateral": false,
+        "espesor_base_mm": 3.0,
+        "contorno_pie_mm": [
+          [
+            0,
+            0
+          ],
+          [
+            -24,
+            10
+          ],
+          [
+            -32,
+            40
+          ],
+          [
+            -36,
+            100
+          ],
+          [
+            -50,
+            160
+          ],
+          [
+            -48,
+            180
+          ],
+          [
+            -40,
+            210
+          ],
+          [
+            -22,
+            235
+          ],
+          [
+            12,
+            248
+          ],
+          [
+            22,
+            248
+          ],
+          [
+            30,
+            235
+          ],
+          [
+            44,
+            210
+          ],
+          [
+            48,
+            180
+          ],
+          [
+            40,
+            160
+          ],
+          [
+            28,
+            100
+          ],
+          [
+            30,
+            40
+          ],
+          [
+            22,
+            10
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "impresion": {
+      "material": "TPU 95A",
+      "patron_relleno": "giroide",
+      "relleno_pct": 30,
+      "relleno_zona_talon_pct": 15,
+      "perimetros": 2,
+      "capa_superior_inferior_mm": 0.6,
+      "altura_capa_mm": 0.2
+    },
+    "justificacion": [
+      "Arco bajo o pie plano: poste medial de retropié.",
+      "Dolor de talón, fascitis o espolón: copa de talón más profunda y zona de talón más suave. Nota: la guía JOSPT 2023 no recomienda la plantilla como tratamiento aislado de la fascitis.",
+      "Dolor en antepié: almohadilla metatarsal unos 8 mm antes de la línea de cabezas metatarsales."
+    ],
+    "nota": "Parámetros por defecto configurables (reglas.json), basados en opinión experta y evidencia limitada. El ortesista decide."
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "folio": "OS-EJEMPLO",
+  "producto": "deportiva",
+  "datos": {
+    "producto": "deportiva",
+    "producto_nombre": "Plantilla Deportiva",
+    "nombre": "Paciente de ejemplo",
+    "edad": 34, "sexo": "Femenino", "peso_kg": 68, "estatura_cm": 165,
+    "medidas": { "largo_pie_cm": 25.0, "talla_mx": "26.5", "arco": "Bajo o plano" },
+    "medicion_pie": {
+      "derecho": { "ok": true, "hoja": "carta", "largo_mm": 250, "ancho_mm": 96, "bola_pct": 0.72, "mtp1_pct": 0.716, "mtp5_pct": 0.632, "confianza": "alta", "avisos": [],
+                   "contorno_mm": [[0,0],[-24,10],[-32,40],[-36,100],[-50,160],[-48,180],[-40,210],[-22,235],[12,250],[22,250],[30,235],[44,210],[48,180],[40,160],[28,100],[30,40],[22,10],[0,0]] },
+      "izquierdo": { "ok": true, "hoja": "carta", "largo_mm": 248, "ancho_mm": 95, "bola_pct": 0.71, "mtp1_pct": 0.712, "mtp5_pct": 0.636, "confianza": "alta", "avisos": [],
+                   "contorno_mm": [[0,0],[-24,10],[-32,40],[-36,100],[-50,160],[-48,180],[-40,210],[-22,235],[12,248],[22,248],[30,235],[44,210],[48,180],[40,160],[28,100],[30,40],[22,10],[0,0]] }
+    },
+    "dolor": [ { "zona": "Talón", "desde": "De 1 a 6 meses", "intensidad": 6, "cuando": ["Al despertar"] },
+               { "zona": "Parte delantera de la planta", "desde": "Menos de 1 mes", "intensidad": 4, "cuando": ["Al correr"] } ],
+    "salud": ["Fascitis plantar"],
+    "salud_nota": "",
+    "actividad": { "uso": "Deporte", "deporte": "Correr", "frecuencia": "2 a 3 veces por semana", "horas_de_pie": null, "calzado": "Deportivo", "ancho": "Normal", "marca_modelo": "" },
+    "objetivo": "Correr 10 km sin dolor de talón"
+  },
+  "archivos": {}
+}

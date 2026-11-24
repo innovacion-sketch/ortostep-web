@@ -12,9 +12,14 @@ terminos.html           Términos, garantía y devoluciones (BORRADOR: completar
 assets/css/styles.css   Estilos (modo claro y oscuro)
 assets/js/config.js     ← lo único que tienes que editar para conectar la página
 assets/js/app.js        Lógica: revisión de capturas, guardado, envío
+assets/js/medicion.js   Mide el pie en la foto sobre la hoja (carta o A4, en el navegador)
+assets/js/postura.js    Revisa con MediaPipe que en los videos se vean el cuerpo y los pies
 assets/img/             Imágenes
 videos/                 Videos de ejemplo (ver videos/LEEME.md)
 supabase/schema.sql     Base de datos: pedidos, archivos y códigos
+supabase/schema_v2_disenos.sql   Tabla y bucket de fichas de diseño
+worker/                 Programa de extracción (computadora del taller): métricas de marcha,
+                        ficha de diseño y exportación al sistema de plantillas. Ver worker/README.md
 ```
 
 ## Cómo funciona el envío de pedidos
@@ -59,13 +64,16 @@ En ningún modo los códigos aparecen en el código de la página.
 - [ ] Si la página anterior estuvo publicada, sus códigos gratis quedaron expuestos: desactívalos en la tabla `cupones` (`activo = false`) y crea nuevos.
 - [x] Conecta Supabase.
 - [ ] Haz un pedido de prueba completo desde un celular Android y un iPhone.
+- [ ] Ejecuta `supabase/schema_v2_disenos.sql` en Supabase e instala el programa de `worker/` en la computadora del taller.
+- [ ] Valida la medición con 10 a 20 pies reales (regla o calibrador) antes de confiar en ella para producción.
 
 ## Qué revisa la página en cada captura
 
 En el celular del cliente, sin enviar nada:
 
-- **Videos:** duración mínima (10 s para el escaneo, 6 s para marcha y sentadilla), resolución, luz y tamaño máximo.
+- **Videos:** duración mínima (10 s para el escaneo, 6 s para marcha y sentadilla), resolución, luz y tamaño máximo. En los 3 videos de movimiento, MediaPipe Pose revisa que se vea a la persona, sus pies y su cuerpo completo, que no haya otra persona y, en el lateral, que cruce el cuadro.
 - **Fotos:** resolución mínima, luz (ni muy oscura ni quemada) y nitidez (detecta fotos movidas o borrosas).
+- **Fotos de medida:** detecta la hoja, distingue carta de A4 aunque la foto esté inclinada, corrige la perspectiva y mide en mm el largo (desde la pared), el ancho del antepié, la posición de la 1.ª y la 5.ª cabeza metatarsal y el contorno del pie. Con eso llena el largo y sugiere la talla.
 - Si hay un error grave, la captura no se acepta. Si es solo una advertencia, se acepta y se le recomienda repetirla. El ortesista hace la revisión final.
 
 El avance se guarda en el navegador del celular (localStorage + IndexedDB) y se borra al enviar el pedido.

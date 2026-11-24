@@ -128,6 +128,8 @@ def construir_ficha(pedido: dict, metricas: dict | None = None, reglas: dict | N
     if l1 and l2 and abs(l1 - l2) > b.get("diferencia_largo_pies_mm", 99):
         bandera("asimetria_largo", f"Diferencia de largo entre pies de {abs(l1 - l2)} mm: verificar fotos (posible error de toma o asimetría real).", True)
     talla_cm = _num((datos.get("medidas") or {}).get("talla_mx"))
+    if not talla_cm or not (15 <= talla_cm <= 35):
+        bandera("sin_talla", "Falta la talla de calzado o está fuera de 15–35 (eligió «Otra talla»): contactar al cliente para confirmarla.", True)
     lmin, lmax = reglas.get("rango_talla_menos_pie_mm", [5, 22])
     for lado, p in pies.items():
         if talla_cm and p.get("largo_mm") and p["fuente"] == "foto_sobre_hoja":

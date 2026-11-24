@@ -100,6 +100,45 @@ def test_ficha_y_reporte():
     assert f2["requiere_revision"] and f2["diseno_sugerido"]["por_pie"]["derecho"]["poste_medial_retropie_grados"] == 0
 
 
+class SupabaseFalso:
+    """Simula Supabase para probar el flujo de procesar_pedido sin red."""
+    def __init__(self, ultimo=None):
+        self.ultimo, self.subidos, self.filas, self.estados = ultimo, {}, [], []
+    def descargar(self, ruta, destino):
+        raise AssertionError("no debería descargar sin videos")
+    def subir(self, ruta, contenido, tipo):
+        self.subidos[ruta] = len(contenido); return ruta
+    def ultimo_diseno(self, pedido_id):
+        return self.ultimo
+    def guardar_diseno(self, fila):
+        self.filas.append(fila)
+    def marcar_pedido(self, pedido_id, estado):
+        self.estados.append(estado)
+
+
+def test_versiones_al_reprocesar():
+    from ortostep_worker.__main__ import procesar_pedido
+    reglas = ficha.cargar_reglas()
+    p = pedido_ejemplo()
+    sb = SupabaseFalso(None)
+    r = procesar_pedido(sb, p, reglas)
+    assert r["version"] == 1 and r["estado"] == "ficha_lista"
+    assert f"{p['id']}/v1/para_diseno.json" in sb.subidos and f"{p['id']}/v1/medidas.json" in sb.subidos
+    # Ficha aún no tomada: se reescribe la misma versión.
+    sb = SupabaseFalso({"version": 1, "estado": "ficha_lista"})
+    assert procesar_pedido(sb, p, reglas)["version"] == 1
+    # Ya tomada o validada por el sistema de plantillas: versión nueva, nunca se pisa.
+    for estado in ("en_cola_diseno", "stl_validado", "rechazado"):
+        sb = SupabaseFalso({"version": 1, "estado": estado})
+        assert procesar_pedido(sb, p, reglas)["version"] == 2
+        assert f"{p['id']}/v2/para_diseno.json" in sb.subidos and sb.filas[0]["version"] == 2
+    # Sin talla: bandera que bloquea.
+    import copy
+    p2 = copy.deepcopy(p); p2["datos"]["medidas"]["talla_mx"] = "Otra"
+    f2 = ficha.construir_ficha(p2)
+    assert any(b["codigo"] == "sin_talla" for b in f2["banderas"]) and f2["requiere_revision"]
+
+
 if __name__ == "__main__":
-    test_cadencia_lateral(); test_cadencia_frontal(); test_ficha_y_reporte()
+    test_cadencia_lateral(); test_cadencia_frontal(); test_ficha_y_reporte(); test_versiones_al_reprocesar()
     print("OK")

@@ -25,6 +25,8 @@ from . import ficha as ficha_mod
 from . import marcha, reporte
 
 VIDEOS_MOVIMIENTO = ("marcha-lateral", "marcha", "sentadilla")
+# Estados de disenos que ya no se pisan: el sistema de plantillas los tomó, validó o rechazó.
+ESTADOS_TOMADOS = {"en_cola_diseno", "stl_validado", "rechazado"}
 EXTENSIONES = (".mp4", ".mov", ".webm", ".m4v", ".3gp", ".mkv", ".avi")
 
 
@@ -88,11 +90,19 @@ def procesar_pedido(sb, pedido: dict, reglas: dict) -> dict:
         estatura = (pedido.get("datos") or {}).get("estatura_cm")
         metricas = analizar_videos(rutas, estatura)
         f = ficha_mod.construir_ficha(pedido, metricas, reglas)
-        base = f"{pedido['id']}/v1"
+        # Versión: si la última ficha ya la tomó el sistema de plantillas (o ya tiene STL o fue
+        # rechazada), un reproceso crea una versión nueva en lugar de pisarla.
+        ultimo = sb.ultimo_diseno(pedido["id"])
+        version = 1
+        if ultimo:
+            version = ultimo["version"] + (1 if ultimo["estado"] in ESTADOS_TOMADOS else 0)
+        f["pedido"]["version_diseno"] = version
+        base = f"{pedido['id']}/v{version}"
         ruta_ficha = os.path.join(trabajo, "ficha.json")
         with open(ruta_ficha, "w", encoding="utf-8") as fh:
             json.dump(f, fh, ensure_ascii=False, indent=2)
         exp = exportacion.para_diseno(pedido, f)
+        exp["version_diseno"] = version
         ruta_exp = os.path.join(trabajo, "para_diseno.json")
         with open(ruta_exp, "w", encoding="utf-8") as fh:
             json.dump(exp, fh, ensure_ascii=False, indent=2)
@@ -115,12 +125,12 @@ def procesar_pedido(sb, pedido: dict, reglas: dict) -> dict:
                         subidos[nombre] = sb.subir(f"{base}/{nombre}", fh.read(), tipo)
         estado = "requiere_revision" if f["requiere_revision"] else ("disenado" if diseno and diseno["codigo"] == 0 else "ficha_lista")
         sb.guardar_diseno({
-            "pedido": pedido["id"], "version": 1, "estado": estado,
+            "pedido": pedido["id"], "version": version, "estado": estado,
             "requiere_revision": f["requiere_revision"], "banderas": f["banderas"],
             "ficha": ficha_mod.ficha_sin_contornos(f), "archivos": subidos, "diseno_log": diseno,
         })
         sb.marcar_pedido(pedido["id"], estado)
-        return {"folio": pedido.get("folio"), "estado": estado, "banderas": len(f["banderas"])}
+        return {"folio": pedido.get("folio"), "version": version, "estado": estado, "banderas": len(f["banderas"])}
     finally:
         # Los videos son datos de salud: no se quedan en la computadora.
         shutil.rmtree(trabajo, ignore_errors=True)

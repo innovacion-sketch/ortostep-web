@@ -46,6 +46,13 @@ class Supabase:
                          json={"estado": estado}, headers={"Prefer": "return=minimal"}, timeout=30)
         r.raise_for_status()
 
+    def ultimo_diseno(self, pedido_id: str) -> dict | None:
+        r = self.s.get(f"{self.url}/rest/v1/disenos", params={
+            "select": "version,estado", "pedido": f"eq.{pedido_id}", "order": "version.desc", "limit": "1"}, timeout=30)
+        r.raise_for_status()
+        filas = r.json()
+        return filas[0] if filas else None
+
     def guardar_diseno(self, fila: dict) -> None:
         r = self.s.post(f"{self.url}/rest/v1/disenos", params={"on_conflict": "pedido,version"},
                         data=json.dumps(fila), headers={"Content-Type": "application/json",

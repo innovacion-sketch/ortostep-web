@@ -47,13 +47,18 @@ Copia `ortostep_worker/reglas_default.json` como **`reglas.json`** en esta carpe
 
 ## Flujo hasta el STL (acordado el 2026-11-24)
 
-1. **Este programa** genera la ficha y deja `disenos.estado = 'ficha_lista'`. Si la ficha tiene banderas, queda en `'requiere_revision'`: el ortesista la revisa en el reporte y, si procede, la cambia a mano a `'ficha_lista'` en el Table Editor.
+1. **Este programa** genera la ficha y deja `disenos.estado = 'ficha_lista'`. Si la ficha tiene banderas, queda en `'requiere_revision'`: el ortesista la revisa en el reporte y, si procede, la libera desde el SQL Editor con `select liberar_ficha('<id del pedido>', 1, 'Nombre');`, que deja registrado quién la aprobó.
+   - Si un pedido se reprocesa cuando su ficha ya la tomó el sistema de plantillas (o ya tiene STL, o fue rechazada), se crea una **versión nueva** (`v2`, `v3`…) en lugar de pisarla.
 2. **El sistema de plantillas**, que corre en el mismo Easypanel, revisa Supabase con `tomar_para_diseno()`. La ficha pasa a `'en_cola_diseno'`. Lee `para_diseno.json` y `medidas.json` y crea el caso en la cola de las diseñadoras con:
    - horma = `producto.horma_para_diseno` (Sandalia y Bostoniana se diseñan como **CLASICA**);
    - densidad = `sugerencias_ortostep.densidad_sugerida.valor`;
    - sucursal = `ORTOSTEP`.
    Lo autodeclarado es **solo informativo**: se muestra a la diseñadora y nunca entra a «notas».
-3. La diseñadora valida y el sistema sube los 2 STL a `disenos/{id_pedido}/v1/stl/`. Después llama a `registrar_stl()`: el diseño pasa a `'stl_validado'` y el pedido a `'stl_listo'`. Si se rechaza, llama a `marcar_diseno_rechazado()`.
+3. Al crear el caso, el sistema llama a `confirmar_caso_diseno()`. Si se cae antes, la ficha se le vuelve a entregar a los 15 minutos.
+4. La diseñadora valida y el sistema sube los 2 STL a `disenos/{id_pedido}/v{versión}/stl/`. Después llama a `registrar_stl()`: el diseño pasa a `'stl_validado'` y el pedido a `'stl_listo'`, salvo que ya esté cancelado, en producción o enviado.
+   - Si la diseñadora reabre un caso validado, el sistema llama a `retirar_stl()` y borra esos STL: así en la carpeta `stl/` solo queda el par vigente.
+   - Si no se puede diseñar, llama a `marcar_diseno_rechazado()`.
+   - Los pedidos cancelados no se toman.
 
 Las funciones están en `supabase/schema_v3_integracion.sql`. **Hay que ejecutarlo** en Supabase. Solo funcionan con la clave secreta, que va en las variables del sistema de plantillas en Easypanel.
 

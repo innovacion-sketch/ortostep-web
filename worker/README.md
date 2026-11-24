@@ -45,6 +45,18 @@ Los videos se borran de la computadora al terminar cada pedido, porque son datos
 
 Copia `ortostep_worker/reglas_default.json` como **`reglas.json`** en esta carpeta y cambia solo lo que quieras: alturas de arco, copa de talón, posteos, posición de la almohadilla, relleno por peso, bloqueos. Casi todos los valores son **puntos de partida de opinión experta**, no umbrales clínicos validados; el ortesista debe calibrarlos.
 
+## Flujo hasta el STL (acordado el 2026-11-24)
+
+1. **Este programa** genera la ficha y deja `disenos.estado = 'ficha_lista'`. Si la ficha tiene banderas, queda en `'requiere_revision'`: el ortesista la revisa en el reporte y, si procede, la cambia a mano a `'ficha_lista'` en el Table Editor.
+2. **El sistema de plantillas**, que corre en el mismo Easypanel, revisa Supabase con `tomar_para_diseno()`. La ficha pasa a `'en_cola_diseno'`. Lee `para_diseno.json` y `medidas.json` y crea el caso en la cola de las diseñadoras con:
+   - horma = `producto.horma_para_diseno` (Sandalia y Bostoniana se diseñan como **CLASICA**);
+   - densidad = `sugerencias_ortostep.densidad_sugerida.valor`;
+   - sucursal = `ORTOSTEP`.
+   Lo autodeclarado es **solo informativo**: se muestra a la diseñadora y nunca entra a «notas».
+3. La diseñadora valida y el sistema sube los 2 STL a `disenos/{id_pedido}/v1/stl/`. Después llama a `registrar_stl()`: el diseño pasa a `'stl_validado'` y el pedido a `'stl_listo'`. Si se rechaza, llama a `marcar_diseno_rechazado()`.
+
+Las funciones están en `supabase/schema_v3_integracion.sql`. **Hay que ejecutarlo** en Supabase. Solo funcionan con la clave secreta, que va en las variables del sistema de plantillas en Easypanel.
+
 ## Conectar el sistema de diseño de plantillas
 
 Por cada pedido se generan dos archivos en el formato acordado con el proyecto de diseño (`automatizacion de plantillas`):

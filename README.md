@@ -64,7 +64,9 @@ En ningún modo los códigos aparecen en el código de la página.
 - [ ] Si la página anterior estuvo publicada, sus códigos gratis quedaron expuestos: desactívalos en la tabla `cupones` (`activo = false`) y crea nuevos.
 - [x] Conecta Supabase.
 - [ ] Haz un pedido de prueba completo desde un celular Android y un iPhone.
-- [ ] Ejecuta `supabase/schema_v2_disenos.sql` en Supabase e instala el programa de `worker/` en la computadora del taller.
+- [x] Ejecuta `supabase/schema_v2_disenos.sql` en Supabase.
+- [ ] Ejecuta `supabase/schema_v3_integracion.sql` en Supabase (conexión con el sistema de plantillas).
+- [ ] Despliega el programa de extracción en Easypanel (ver DESPLIEGUE.md).
 - [ ] Valida la medición con 10 a 20 pies reales (regla o calibrador) antes de confiar en ella para producción.
 
 ## Qué revisa la página en cada captura

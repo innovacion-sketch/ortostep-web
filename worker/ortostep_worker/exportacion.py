@@ -14,6 +14,10 @@ from datetime import datetime, timedelta, timezone
 
 VERSION = 1
 HORMAS = {"clasica": "CLASICA", "deportiva": "DEPORTIVA"}
+# Decisión del usuario (2026-11-24): Sandalia y Bostoniana se diseñan como plantilla CLASICA
+# de su talla, que luego se monta en el calzado.
+HORMA_PARA_DISENO = {"clasica": "CLASICA", "deportiva": "DEPORTIVA", "sandalia": "CLASICA", "bostoniana": "CLASICA"}
+SUCURSAL = "ORTOSTEP"
 
 
 def _fecha_mx(iso: str | None) -> str:
@@ -73,12 +77,18 @@ def para_diseno(pedido: dict, ficha: dict) -> dict:
             "peso_kg": datos.get("peso_kg"),
             "estatura_cm": datos.get("estatura_cm"),
         },
+        "sucursal": SUCURSAL,
         "producto": {
-            "tipo": HORMAS.get(prod, (prod or "").upper()),
-            "soportado_por_sistema_de_diseno": prod in HORMAS,
+            "tipo": HORMAS.get(prod, (prod or "").upper()),          # lo que compró el cliente
+            "horma_para_diseno": HORMA_PARA_DISENO.get(prod),          # con qué horma se diseña la plantilla
+            "es_calzado": prod in ("sandalia", "bostoniana"),
+            "soportado_por_sistema_de_diseno": prod in HORMA_PARA_DISENO,
             "talla_cm": talla_cm,
             "color": datos.get("color"),
         },
+        # Decisión del usuario: lo autodeclarado es SOLO informativo para la diseñadora;
+        # no debe convertirse en aditamentos ni pasar por el modelo de «notas».
+        "politica_autodeclarado": "solo_informativo",
         "pies": pies,
         # Lo que el cliente dijo de sí mismo. Bloque separado a propósito: NO debe ir a «notas».
         "autodeclarado": {
@@ -120,6 +130,7 @@ def _densidad(prod: str | None, ficha: dict) -> dict:
     """Sugerencia, no decisión: SUAVE / INTERMEDIA / RIGIDA / DEPORTIVA (vocabulario del sistema de diseño)."""
     cond = ficha.get("clinica", {}).get("condiciones") or []
     peso = (ficha.get("paciente") or {}).get("peso_kg") or 0
+    # Decisión del usuario: se usa la densidad sugerida (la diseñadora puede cambiarla).
     if "Diabetes" in cond:
         return {"valor": "SUAVE", "motivo": "diabetes (capa suave, requiere revisión)"}
     if prod == "deportiva":

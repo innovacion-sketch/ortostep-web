@@ -15,12 +15,16 @@
     "peso_kg": 68,
     "estatura_cm": 165
   },
+  "sucursal": "ORTOSTEP",
   "producto": {
     "tipo": "DEPORTIVA",
+    "horma_para_diseno": "DEPORTIVA",
+    "es_calzado": false,
     "soportado_por_sistema_de_diseno": true,
     "talla_cm": 26.5,
     "color": null
   },
+  "politica_autodeclarado": "solo_informativo",
   "pies": {
     "izquierdo": {
       "largo_mm": 248,

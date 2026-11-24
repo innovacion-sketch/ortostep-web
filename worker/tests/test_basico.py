@@ -73,6 +73,7 @@ def test_ficha_y_reporte():
     html = reporte.generar(f)
     assert "Ficha de diseño" in html and "<svg" in html
     # Exportación para el sistema de diseño (formato acordado)
+    import copy
     from ortostep_worker import exportacion
     e = exportacion.para_diseno(p, f)
     assert e["producto"]["tipo"] == "DEPORTIVA" and e["producto"]["talla_cm"] == 26.5
@@ -81,6 +82,11 @@ def test_ficha_y_reporte():
     assert min(pt[1] for pt in c) == 0 and abs(sum(pt[0] for pt in c if pt[1] == 0)) < 1e-6  # origen en el talón
     assert "Fascitis plantar" in e["autodeclarado"]["condiciones"]
     assert "notas" not in e                                   # lo autodeclarado nunca va a notas
+    assert e["producto"]["horma_para_diseno"] == "DEPORTIVA" and e["sucursal"] == "ORTOSTEP"
+    assert e["politica_autodeclarado"] == "solo_informativo"
+    ps = copy.deepcopy(p); ps["datos"]["producto"] = "sandalia"
+    es = exportacion.para_diseno(ps, ficha.construir_ficha(ps))
+    assert es["producto"]["tipo"] == "SANDALIA" and es["producto"]["horma_para_diseno"] == "CLASICA" and es["producto"]["soportado_por_sistema_de_diseno"]
     m = exportacion.medidas_json(f)
     assert m["right"] == {"footLength": 250, "footWidth": 96}
     # Talla corta para el pie medido: bandera que obliga a revisión.

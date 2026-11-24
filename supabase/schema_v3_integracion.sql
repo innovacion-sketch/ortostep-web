@@ -1,7 +1,8 @@
 -- ==========================================================
 -- ORTOSTEP — v3: integración con el sistema de diseño de plantillas
 -- Ejecuta este archivo en Supabase → SQL Editor → New query → Run
--- (después de schema.sql y schema_v2_disenos.sql). Es seguro ejecutarlo más de una vez.
+-- (después de schema.sql). Incluye todo lo de schema_v2_disenos.sql, así que no hace
+-- falta ejecutar ese antes. Es seguro ejecutarlo más de una vez.
 --
 -- Flujo acordado (decisiones del usuario, 2026-11-24):
 --   1. El programa de extracción deja la ficha:        disenos.estado = 'ficha_lista'
@@ -16,6 +17,31 @@
 --   Las funciones solo se pueden usar con la clave SECRETA (servidor), nunca desde la página.
 -- ==========================================================
 
+-- ---------- Lo de v2: tabla y bucket de diseños (no hace nada si ya existen) ----------
+create table if not exists public.disenos (
+  id                 bigint generated always as identity primary key,
+  pedido             uuid not null references public.pedidos(id) on delete cascade,
+  version            integer not null default 1,
+  creado             timestamptz not null default now(),
+  estado             text not null,
+  requiere_revision  boolean not null default true,
+  banderas           jsonb not null default '[]'::jsonb,
+  ficha              jsonb not null,
+  archivos           jsonb not null default '{}'::jsonb,
+  diseno_log         jsonb,
+  aprobado_por       text,
+  aprobado_en        timestamptz,
+  notas              text,
+  unique (pedido, version)
+);
+alter table public.disenos enable row level security;
+create index if not exists disenos_estado_idx on public.disenos (estado);
+
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('disenos', 'disenos', false, 52428800)
+on conflict (id) do update set public = false;
+
+-- ---------- v3: integración ----------
 alter table public.disenos add column if not exists caso_externo   text;          -- id del caso en el sistema de plantillas
 alter table public.disenos add column if not exists tomado_en      timestamptz;
 alter table public.disenos add column if not exists stl            jsonb;         -- {"L": "ruta", "R": "ruta"} en el bucket disenos

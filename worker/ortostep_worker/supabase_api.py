@@ -14,7 +14,9 @@ import requests
 class Supabase:
     def __init__(self, url: str, clave: str, bucket_expedientes: str = "expedientes", bucket_disenos: str = "disenos"):
         if not url or not clave:
-            raise RuntimeError("Faltan SUPABASE_URL o SUPABASE_SECRET_KEY en el archivo .env")
+            raise RuntimeError("Faltan SUPABASE_URL o SUPABASE_SECRET_KEY (variables de entorno en Easypanel, o archivo .env)")
+        if clave.startswith("sb_publishable_"):
+            raise RuntimeError("SUPABASE_SECRET_KEY tiene la clave PÚBLICA (sb_publishable_). Debe ser la secreta (sb_secret_).")
         self.url = url.rstrip("/")
         self.clave = clave
         self.be = bucket_expedientes

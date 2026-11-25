@@ -195,7 +195,14 @@ begin
 end;
 $$;
 
--- ---------- Permisos: solo el servidor (clave secreta) ----------
+-- ---------- Permisos de tablas para el servidor (clave secreta = service_role) ----------
+-- En este proyecto las tablas nuevas no reciben permisos automáticos, así que se dan aquí.
+-- La página (anon) sigue SIN acceso a las tablas: solo usa las funciones crear_pedido y validar_cupon.
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.pedidos, public.disenos, public.cupones to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
+-- ---------- Permisos de funciones: solo el servidor (clave secreta) ----------
 revoke all on function public.tomar_para_diseno(integer)                         from public, anon, authenticated;
 revoke all on function public.confirmar_caso_diseno(uuid, integer, text)          from public, anon, authenticated;
 revoke all on function public.registrar_stl(uuid, integer, jsonb, text, text)     from public, anon, authenticated;

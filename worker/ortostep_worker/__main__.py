@@ -202,7 +202,12 @@ def main(argv: list[str]) -> int:
                     except Exception:
                         pass
         except Exception as e:
-            print("Error consultando Supabase:", e)
+            msg = str(e)
+            if " 401 " in msg or "401 Client Error" in msg:
+                msg += "  → La clave no es válida o fue revocada: revisa SUPABASE_SECRET_KEY."
+            elif "403 Client Error" in msg:
+                msg += "  → Faltan permisos de tabla para la clave secreta: ejecuta supabase/schema_v3_integracion.sql (sección de permisos)."
+            print("Error consultando Supabase:", msg)
         time.sleep(intervalo)
 
 

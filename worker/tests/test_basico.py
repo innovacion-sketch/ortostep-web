@@ -65,7 +65,7 @@ def test_ficha_y_reporte():
     p = pedido_ejemplo()
     f = ficha.construir_ficha(p, {"sentadilla": {"metricas": {"derecho": {"fppa_grados": 14.0}, "izquierdo": {"fppa_grados": 4.0}}}})
     d = f["diseno_sugerido"]["por_pie"]["derecho"]
-    assert d["largo_plantilla_mm"] == 268                  # talla 26.5 -> 265 + 3 mm
+    assert d["largo_plantilla_mm"] == 265                  # talla 26.5 -> 265 mm (tabla del sistema de diseño)
     assert d["poste_medial_retropie_grados"] >= 2          # FPPA 14° > umbral
     assert d["almohadilla_metatarsal"] is not None          # dolor en antepié
     assert d["copa_talon_mm"] == 15                         # fascitis

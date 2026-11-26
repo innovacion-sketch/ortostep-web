@@ -1,8 +1,8 @@
 {
   "_nota": "Valores por defecto configurables. Casi ninguno es un umbral clínico validado: son puntos de partida de opinión experta que el ortesista debe ajustar. Cambia este archivo (o crea reglas.json junto al programa) sin tocar el código.",
 
-  "_largo_plantilla": "El largo de la plantilla sale de la TALLA (como en el sistema de diseño: talla 24 → 243 mm, 27 → 273, 30 → 303). El largo medido del pie solo sirve para cotejar.",
-  "largo_plantilla_desde_talla_mm": 3,
+  "_largo_plantilla": "Aproximado: el largo real lo pone el sistema de diseño con su tabla por talla (26 → 260, 26.5 → 265, 27 → 273, 27.5 → 277). El largo medido del pie solo sirve para cotejar.",
+  "largo_plantilla_desde_talla_mm": 0,
   "largo_plantilla_sin_talla_extra_mm": 13,
   "rango_talla_menos_pie_mm": [5, 22],
   "posicion_almohadilla_metatarsal_mm_antes_de_cabezas": 8,

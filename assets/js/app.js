@@ -641,6 +641,7 @@
       var meta = { name: file.name || key, type: file.type, size: file.size, level: res.level, msgs: res.msgs, info: res.info || '', recorded: !!opts.recorded };
       if (res.medida !== undefined) meta.medida = res.medida;
       if (res.postura !== undefined) meta.postura = res.postura;
+      if (res.revision !== undefined) meta.revision = res.revision;
       S.files[key] = meta;
       if (res.level === 'err') {
         delete FILES[key];
@@ -711,24 +712,86 @@
 
   /* ---------- Revisión de postura en videos de movimiento ---------- */
   function pct(x) { return Math.round(x * 100) + ' %'; }
+
+  // Traduce lo que detectó MediaPipe en instrucciones concretas para el cliente.
+  // Devuelve errores (hay que repetir), advertencias (sirve, pero conviene repetir) y una
+  // lista de comprobaciones ✓/✗ para mostrar en la tarjeta.
+  function evaluarPostura(p, tipo) {
+    var errs = [], warns = [], lista = [];
+    function check(ok, texto) { lista.push({ ok: ok, texto: texto }); return ok; }
+    if (!check(p.persona >= 0.6, 'Se te detecta en el video')) {
+      errs.push('Casi no te detectamos (solo en ' + pct(p.persona) + ' del video). Graba con buena luz, sin una ventana detrás de ti y con todo tu cuerpo a la vista.');
+      return { errs: errs, warns: warns, lista: lista };
+    }
+    if (!check(p.altura_media <= 0.92, 'Cabes completo en el cuadro')) {
+      errs.push('Sales cortado. Aleja el celular para que quepas completo, con espacio arriba de tu cabeza y abajo de tus pies.');
+    } else if (p.altura_media < 0.3) {
+      warns.push('Te ves muy pequeño en el video. Acércate a unos 3 metros de la cámara.');
+    }
+    if (!check(p.pies >= 0.8, 'Se ven tus pies')) {
+      (p.pies < 0.6 ? errs : warns).push('No se ven bien tus pies en ' + pct(1 - p.pies) + ' del video. Pon el celular a la altura de tu cadera, a 3 o 4 metros, y que se vea el piso bajo tus pies. Usa ropa que no tape los tobillos.');
+    }
+    if (p.cuerpo < 0.6) warns.push('Que se vea todo tu cuerpo, de la cabeza a los pies, durante todo el video.');
+    if (!check(p.otra <= 0.2, 'Solo apareces tú')) warns.push('Aparece otra persona en el video. Graba solo a quien hace el ejercicio.');
+
+    if (tipo === 'lado') {
+      if (!check(p.perfil >= 0.5, 'Caminas de perfil')) {
+        errs.push('No caminaste de perfil. La cámara debe verte de lado mientras caminas de un extremo al otro, no caminando hacia ella.');
+      }
+      if (!check(p.desplazamiento >= 0.35, 'Cruzas el cuadro de lado a lado')) {
+        errs.push('No cruzaste el cuadro. Empieza en un lado, camina hasta el otro extremo, da la vuelta y regresa.');
+      }
+      if (!check((p.pasos || 0) >= 6, 'Pasos detectados: ' + (p.pasos || 0) + ' (mínimo 6)')) {
+        ((p.pasos || 0) < 4 ? errs : warns).push('Detectamos solo ' + (p.pasos || 0) + ' pasos y necesitamos al menos 6. Camina más: de un extremo al otro, ida y vuelta, a tu paso normal.');
+      }
+    } else if (tipo === 'frente') {
+      if (!check(p.acercamiento >= 1.25, 'Caminas hacia la cámara y de regreso')) {
+        errs.push('No vimos que caminaras hacia la cámara y de regreso. Empieza a unos 6 metros, camina hacia el celular y regresa dándole la espalda.');
+      }
+      if (p.de_frente < 0.4) warns.push('Camina de frente a la cámara (no de lado): la cámara debe verte de frente al venir y de espaldas al regresar.');
+      if (!check((p.pasos || 0) >= 6, 'Pasos detectados: ' + (p.pasos || 0) + ' (mínimo 6)')) {
+        ((p.pasos || 0) < 4 ? errs : warns).push('Detectamos solo ' + (p.pasos || 0) + ' pasos y necesitamos al menos 6. Camina unos 10 pasos hacia la cámara y regresa.');
+      }
+    } else if (tipo === 'sentadilla') {
+      if (p.de_frente < 0.5) warns.push('Ponte de frente a la cámara para la sentadilla.');
+      ['izquierda', 'derecha'].forEach(function (nombre) {
+        var lado = nombre === 'izquierda' ? 'izquierdo' : 'derecho', otro = nombre === 'izquierda' ? 'derecho' : 'izquierdo';
+        var apoyo = (p.apoyo_s || {})[lado] || 0, flex = (p.flexion_max || {})[lado] || 0;
+        if (!check(apoyo >= 1, 'Sentadilla sobre la pierna ' + nombre)) {
+          errs.push('No vimos la sentadilla sobre la pierna ' + nombre + '. Levanta el pie ' + otro + ', baja despacio sobre la pierna ' + nombre + ' y sube, 3 veces.');
+        } else if (!check(flex >= 25, 'Flexionas la rodilla ' + nombre + ' (' + flex + '°)')) {
+          warns.push('Baja un poco más sobre la pierna ' + nombre + ': flexiona la rodilla hasta donde puedas con control (vimos ' + flex + '°).');
+        }
+      });
+    }
+    return { errs: errs, warns: warns, lista: lista };
+  }
+  function pintarPostura(card, meta) {
+    var cont = card.querySelector('.pose-box');
+    var p = meta && meta.postura;
+    if (!p || meta.level === 'busy') { if (cont) cont.hidden = true; return; }
+    if (!cont) {
+      cont = document.createElement('div'); cont.className = 'pose-box';
+      card.insertBefore(cont, card.querySelector('.qstatus'));
+    }
+    var html = '';
+    if (p.vista) html += '<img src="' + p.vista + '" alt="Lo que detectó el sistema en tu video: tu esqueleto y tus pies" />';
+    if (meta.revision && meta.revision.length) {
+      html += '<ul>' + meta.revision.map(function (c) { return '<li class="' + (c.ok ? 'ok' : 'no') + '">' + (c.ok ? '✓ ' : '✗ ') + esc(c.texto) + '</li>'; }).join('') + '</ul>';
+    }
+    cont.innerHTML = html; cont.hidden = !html;
+  }
   function checkPose(key, file, rule, res, known) {
     if (res.level === 'err' || !window.OrtostepPostura) return Promise.resolve(res);
     var qs = cardFor(key).querySelector('.qstatus');
-    qs.className = 'qstatus show busy'; qs.textContent = 'Revisando que se vean tu cuerpo y tus pies…';
-    return window.OrtostepPostura.revisar(file, res.duracion || known).then(function (p) {
-      var errs = [], warns = [];
-      if (p.persona < 0.5) errs.push('Casi no te detectamos en el video (solo en ' + pct(p.persona) + ' de los cuadros). Que se vea todo tu cuerpo y haya buena luz.');
-      else {
-        if (p.pies < 0.5) errs.push('No se ven bien tus pies en la mayor parte del video (solo en ' + pct(p.pies) + '). Aleja el celular a 3 o 4 metros, a la altura de tu cadera.');
-        else if (p.pies < 0.75) warns.push('Tus pies no se ven en parte del video (se ven en ' + pct(p.pies) + ').');
-        if (p.cuerpo < 0.6) warns.push('Que se vea todo tu cuerpo, de la cabeza a los pies, durante todo el video.');
-        if (p.otra > 0.25) warns.push('Aparece otra persona en el video. Graba solo a quien camina.');
-        if (rule.pose === 'lado' && p.desplazamiento < 0.25) warns.push('Parece que no cruzaste el cuadro de lado a lado. Camina de perfil de un extremo al otro.');
-      }
-      var out = { level: res.level, msgs: (res.msgs || []).slice(), info: res.info, postura: p };
-      if (errs.length) { out.level = 'err'; out.msgs = errs.concat(warns); }
-      else if (warns.length) { out.level = 'warn'; out.msgs = (res.level === 'warn' ? res.msgs : []).concat(warns); }
-      if (out.level === 'ok') out.info = (res.info ? res.info + ' · ' : '') + 'cuerpo y pies visibles';
+    qs.className = 'qstatus show busy'; qs.textContent = 'Analizando tu video para ver si sirve…';
+    function progreso(f) { qs.textContent = 'Analizando tu video para ver si sirve… ' + Math.round(f * 100) + ' %'; }
+    return window.OrtostepPostura.revisar(file, res.duracion || known, rule.pose, progreso).then(function (p) {
+      var ev = evaluarPostura(p, rule.pose);
+      var out = { level: res.level, msgs: (res.msgs || []).slice(), info: res.info, postura: p, revision: ev.lista };
+      if (ev.errs.length) { out.level = 'err'; out.msgs = ev.errs.concat(ev.warns); }
+      else if (ev.warns.length) { out.level = 'warn'; out.msgs = (res.level === 'warn' ? res.msgs : []).concat(ev.warns); }
+      if (out.level === 'ok') out.info = (res.info ? res.info + ' · ' : '') + 'el video sirve para el análisis';
       return out;
     }).catch(function (e) {
       if (window.console) console.warn('Revisión de postura no disponible:', e && e.message);
@@ -760,6 +823,7 @@
     }
     if (recBtn) recBtn.textContent = accepted(key) ? 'Volver a grabar' : 'Grabar con la cámara';
     if (RULES[key].type === 'measure') pintarMedida(card, key, meta, blob);
+    if (RULES[key].pose) pintarPostura(card, meta);
   }
 
   flow.addEventListener('change', function (e) {
@@ -1079,7 +1143,11 @@
       medidas: { largo_pie_cm: val('f-largo') ? +val('f-largo') : null, talla_mx: val('f-talla'), arco: checkedVal('arco') },
       medicion_pie: { derecho: medidaParaEnvio('derecho'), izquierdo: medidaParaEnvio('izquierdo') },
       revision_postura: ['marcha', 'marcha-lateral', 'sentadilla'].reduce(function (o, k) {
-        var m = S.files[k]; o[k] = m && m.postura ? m.postura : null; return o;
+        var m = S.files[k];
+        if (!m || !m.postura) { o[k] = null; return o; }
+        var c = {}; Object.keys(m.postura).forEach(function (x) { if (x !== 'vista') c[x] = m.postura[x]; });
+        c.comprobaciones = m.revision || [];
+        o[k] = c; return o;
       }, {}),
       dolor: S.sinDolor ? 'sin dolor' : Object.keys(S.pain).map(function (k) {
         var d = S.pain[k]; return { zona: ZONES[k], desde: d.desde, intensidad: d.nivel, cuando: d.cuando };

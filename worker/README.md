@@ -5,7 +5,7 @@ Convierte cada pedido que llega a Supabase en una **ficha de diseño de plantill
 1. Toma las medidas del pie que la página ya calculó con la foto sobre la hoja: largo, ancho, cabezas metatarsales y contorno, en mm.
 2. Descarga los 3 videos de movimiento y calcula las métricas de marcha y sentadilla con MediaPipe: cadencia, tiempo de paso, % de apoyo, asimetría y ángulo FPPA de rodilla.
 3. Aplica reglas configurables y genera un **diseño sugerido por pie**: largo de plantilla, altura y posición del arco, copa de talón, poste medial, almohadilla metatarsal, talón suave, espesor y relleno de impresión.
-4. Marca **banderas** que obligan a revisión del ortesista: diabetes, dolor intenso, cirugías, medición dudosa, menores, dolor en el dorso, etc.
+4. Marca **banderas** (diabetes, dolor intenso, cirugías, medición dudosa, talla que no cuadra, dolor en el dorso, etc.) que la diseñadora ve en el caso. Por decisión del 2026-11-26, **todos los pedidos pasan a diseño** y solo los detiene la falta de talla. Para volver a detener un tipo de caso, agrega su código a `banderas_que_bloquean` en `reglas.json` (por ejemplo `"diabetes"`).
 5. Sube a Supabase `ficha.json` y un `reporte.html` para el ortesista, y registra el estado en la tabla `disenos`.
 6. Si se configura `DISENO_CMD`, llama al **sistema de diseño de plantillas** con la ficha y sube los archivos 3D que genere.
 

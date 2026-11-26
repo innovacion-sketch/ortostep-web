@@ -535,3 +535,12 @@ mark.pendiente{background:#FFE58F;color:#3A2E00;padding:0 4px;border-radius:4px}
 .mres{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.95rem}
 .mres dt{color:var(--ink-soft);font-weight:600}
 .mres dd{margin:0;font-weight:800}
+
+/* Revisión de postura: esqueleto detectado y comprobaciones */
+.pose-box{display:grid;gap:8px;background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;padding:10px}
+.pose-box[hidden]{display:none}
+.pose-box img{width:100%;border-radius:8px;background:#000}
+.pose-box ul{list-style:none;margin:0;padding:0;display:grid;gap:4px;font-size:.88rem;font-weight:700}
+.pose-box li.ok{color:var(--teal)}
+.pose-box li.no{color:#C0392B}
+@media (prefers-color-scheme: dark){ .pose-box li.ok{color:#9FE0DE} .pose-box li.no{color:#F3A1A8} }

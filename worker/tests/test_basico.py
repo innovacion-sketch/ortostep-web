@@ -93,11 +93,17 @@ def test_ficha_y_reporte():
     import copy
     p3 = copy.deepcopy(p); p3["datos"]["medidas"]["talla_mx"] = "25"
     f3 = ficha.construir_ficha(p3)
-    assert any(b["codigo"].startswith("talla_corta") for b in f3["banderas"]) and f3["requiere_revision"]
+    tc = [b for b in f3["banderas"] if b["codigo"].startswith("talla_corta")]
+    assert tc and not tc[0]["bloquea"] and not f3["requiere_revision"]   # se informa, no detiene
+    # Si se vuelve a configurar como bloqueante, sí detiene.
+    r3 = ficha.cargar_reglas(); r3["banderas_que_bloquean"] = ["sin_talla", "talla_corta"]
+    assert ficha.construir_ficha(p3, reglas=r3)["requiere_revision"]
     # Con diabetes se bloquea y no se ponen postes automáticos.
     p["datos"]["salud"].append("Diabetes")
     f2 = ficha.construir_ficha(p)
-    assert f2["requiere_revision"] and f2["diseno_sugerido"]["por_pie"]["derecho"]["poste_medial_retropie_grados"] == 0
+    dia = [b for b in f2["banderas"] if b["codigo"] == "diabetes"]
+    assert dia and not dia[0]["bloquea"] and not f2["requiere_revision"]   # visible para la diseñadora, no detiene
+    assert f2["diseno_sugerido"]["por_pie"]["derecho"]["poste_medial_retropie_grados"] == 0
 
 
 class SupabaseFalso:

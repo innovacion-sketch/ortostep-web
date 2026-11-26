@@ -26,8 +26,11 @@
   "relleno_extra_deportiva_pct": 5,
   "relleno_zona_talon_suave_pct": 15,
 
+  "_banderas_que_bloquean": "Códigos (o prefijos) de banderas que detienen el pedido antes de diseñar. Las demás banderas se muestran a la diseñadora sin detenerlo. Decisión del usuario 2026-11-26: que todos los pedidos pasen; solo bloquea la falta de talla. Para volver a exigir revisión en un caso, agrega su código, p. ej. \"diabetes\".",
+  "banderas_que_bloquean": ["sin_talla"],
+
   "bloqueos": {
-    "_nota": "Casos que nunca se diseñan ni imprimen sin revisión del ortesista.",
+    "_nota": "Qué situaciones se DETECTAN y se marcan como bandera (true = se revisa). Si además detienen el pedido lo decide banderas_que_bloquean.",
     "diabetes": true,
     "dolor_maximo_igual_o_mayor": 8,
     "edad_menor_a": 12,

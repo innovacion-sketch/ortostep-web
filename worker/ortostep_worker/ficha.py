@@ -106,7 +106,14 @@ def construir_ficha(pedido: dict, metricas: dict | None = None, reglas: dict | N
     b = reglas["bloqueos"]
     banderas: list[dict] = []
 
+    # Qué banderas detienen el pedido lo decide reglas["banderas_que_bloquean"] (por prefijo de código).
+    # Decisión del usuario (2026-11-26): que todos los pedidos pasen a diseño; las banderas se
+    # muestran a la diseñadora, que valida cada caso. Solo bloquea la falta de talla.
+    que_bloquean = reglas.get("banderas_que_bloquean")
+
     def bandera(codigo: str, mensaje: str, bloquea: bool) -> None:
+        if que_bloquean is not None:
+            bloquea = any(codigo == c or codigo.startswith(c + "_") for c in que_bloquean)
         banderas.append({"codigo": codigo, "mensaje": mensaje, "bloquea": bloquea})
 
     if b.get("diabetes") and "Diabetes" in salud:
